@@ -1,40 +1,63 @@
+const iraqLocations = {
+    "ديالى": {
+        "قضاء بعقوبة": {
+            "ناحية مركز بعقوبة": ["حي التحرير", "حي المعلم", "السور الباب"],
+            "ناحية عبارة": ["العبارة المركز"]
+        }
+    },
+    "بغداد": {
+        "قضاء الكرخ": {
+            "ناحية المنصور": ["المنصور المركز", "الدولعي"]
+        }
+    }
+};
+
 let driversData = [
-    { id: 1, name: "أحمد العزاوي", phone: "000000", type: "تكسي", city: "بعقوبة - التحرير", img: "https://via.placeholder.com/50" },
-    { id: 2, name: "سعد التكتك", phone: "777777", type: "تكتك", city: "بعقوبة - المعلم", img: "https://via.placeholder.com/50" },
-    { id: 3, name: "علي الدراجة", phone: "8888888", type: "دراجة", city: "خالص", img: "https://via.placeholder.com/50" }
+    { id: 1, name: "أحمد العزاوي", phone: "000000", type: "تكسي", gov: "ديالى", neighborhood: "حي التحرير", landmark: "مستشفى البتول", img: "https://via.placeholder.com/50", status: "active" },
+    { id: 2, name: "سعد التكتك", phone: "7777777", type: "تكتك", gov: "ديالى", neighborhood: "حي المعلم", landmark: "الفرع الثاني", img: "https://via.placeholder.com/50", status: "active" }
 ];
 
 // تهيئة الخريطة
-const map = L.map('map').setView([33.3152, 44.3661], 12);
-
+const map = L.map('map').setView([33.3152, 44.3661], 8);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
-let clickCount = 0;
+let mapClickStep = 0;
 let selectedVehicleType = 'all';
 
-// تفاعل النقر على الخريطة لتحديد المسار (الانطلاق ثم الوصول)
+// التبديل بين طرق تحديد الرحلة
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.method-content').forEach(c => c.classList.remove('active'));
+        
+        e.target.classList.add('active');
+        const targetId = e.target.getAttribute('data-target');
+        document.getElementById(targetId).classList.add('active');
+    });
+});
+
+// التحديد عبر الخريطة مع زر الحذف (✕)
 map.on('click', function(e) {
-    const latlngText = `خط العرض: ${e.latlng.lat.toFixed(4)}, خط الطول: ${e.latlng.lng.toFixed(4)}`;
+    const coordsText = `خط العرض: ${e.latlng.lat.toFixed(4)}, خط الطول: ${e.latlng.lng.toFixed(4)}`;
     
-    if (clickCount === 0) {
-        document.getElementById('startPoint').value = latlngText;
-        L.marker(e.latlng).addTo(map).bindPopup('نقطة الانطلاق').openPopup();
-        clickCount = 1;
-    } else if (clickCount === 1) {
-        document.getElementById('stopPoint').value = latlngText;
-        L.marker(e.latlng).addTo(map).bindPopup('نقطة التوقف').openPopup();
-        clickCount = 2;
+    if (mapClickStep === 0) {
+        document.getElementById('mapStart').value = coordsText;
+        mapClickStep = 1;
     } else {
-        document.getElementById('endPoint').value = latlngText;
-        L.marker(e.latlng).addTo(map).bindPopup('نقطة الوصول').openPopup();
-        clickCount = 0; // إعادة تعيين للدورة القادمة
+        document.getElementById('mapEnd').value = coordsText;
+        mapClickStep = 0;
     }
 });
 
-// إدارة شاشة اختيار الدور (سائق / راكب)
+function clearField(fieldId) {
+    document.getElementById(fieldId).value = '';
+    if(fieldId === 'mapStart') mapClickStep = 0;
+}
+
+// نافذة الأدوار
 window.addEventListener('DOMContentLoaded', () => {
     const roleModal = document.getElementById('roleModal');
     const registerModal = document.getElementById('registerModal');
@@ -49,23 +72,46 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// تسجيل السائق الجديد
-document.getElementById('registerForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newUser = {
-        name: document.getElementById('regName').value,
-        phone: document.getElementById('regPhone').value,
-        type: document.getElementById('regType').value,
-        city: document.getElementById('regCity').value,
-        img: document.getElementById('regImg').value || 'https://via.placeholder.com/50'
-    };
+// تسلسل دليل المدن
+const govSelect = document.getElementById('selectGov');
+const distSelect = document.getElementById('selectDistrict');
+const subDistSelect = document.getElementById('selectSubdistrict');
+const neighSelect = document.getElementById('selectNeighborhood');
 
-    driversData.unshift(newUser);
-    document.getElementById('registerModal').classList.add('hidden');
-    alert('تم تسجيل بياناتك بنجاح وأصبحت متاحة في الدليل.');
+govSelect.addEventListener('change', function() {
+    distSelect.innerHTML = '<option value="">اختر القضاء...</option>';
+    distSelect.disabled = !this.value;
+    if(this.value && iraqLocations[this.value]) {
+        for (let dist in iraqLocations[this.value]) {
+            distSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
+        }
+    }
 });
 
-// اختيار نوع المركبة في الفلتر
+distSelect.addEventListener('change', function() {
+    subDistSelect.innerHTML = '<option value="">اختر الناحية...</option>';
+    subDistSelect.disabled = !this.value;
+    const gov = govSelect.value;
+    if(this.value && iraqLocations[gov][this.value]) {
+        for (let sub in iraqLocations[gov][this.value]) {
+            subDistSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+        }
+    }
+});
+
+subDistSelect.addEventListener('change', function() {
+    neighSelect.innerHTML = '<option value="">اختر الحي...</option>';
+    neighSelect.disabled = !this.value;
+    const gov = govSelect.value;
+    const dist = distSelect.value;
+    if(this.value && iraqLocations[gov][dist][this.value]) {
+        iraqLocations[gov][dist][this.value].forEach(n => {
+            neighSelect.innerHTML += `<option value="${n}">${n}</option>`;
+        });
+    }
+});
+
+// فلاتر المركبات
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -74,30 +120,33 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// تنفيذ البحث فقط عند الضغط على زر "بحث"
+// زر البحث
 document.getElementById('searchBtn').addEventListener('click', () => {
     const term = document.getElementById('searchInput').value.toLowerCase().trim();
-    
+    const selectedNeigh = neighSelect.value;
+
     let filtered = driversData.filter(driver => {
+        if (driver.status !== 'active') return false;
         const matchesType = (selectedVehicleType === 'all' || driver.type === selectedVehicleType);
-        const matchesTerm = (driver.name.toLowerCase().includes(term) || driver.city.toLowerCase().includes(term) || term === '');
-        return matchesType && matchesTerm;
+        const matchesNeigh = (selectedNeigh === '' || driver.neighborhood === selectedNeigh);
+        const matchesTerm = (term === '' || driver.name.toLowerCase().includes(term) || driver.landmark.toLowerCase().includes(term));
+        return matchesType && matchesNeigh && matchesTerm;
     });
 
     loadDriversList(filtered);
 });
 
-// عرض السائقين تحت قسم "نتائج البحث"
+// عرض النتائج
 function loadDriversList(data) {
     const container = document.getElementById('driversList');
     container.innerHTML = '';
 
     if (data.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد نتائج مطابقة لبحثك.</p>';
+        container.innerHTML = '<p style="text-align:center; color:#777;">لا توجد نتائج مطابقة.</p>';
         return;
     }
 
-    data.forEach((driver, index) => {
+    data.forEach(driver => {
         const card = document.createElement('div');
         card.className = 'driver-card';
         card.innerHTML = `
@@ -105,20 +154,22 @@ function loadDriversList(data) {
                 <img src="${driver.img}" alt="${driver.name}">
                 <div class="driver-info">
                     <h4>${driver.name} (${driver.type})</h4>
-                    <p>📍 ${driver.city}</p>
+                    <p>📍 ${driver.gov} - ${driver.neighborhood}</p>
                 </div>
             </div>
             <div class="driver-actions">
                 <a href="tel:${driver.phone}" class="call-btn">📞 اتصال</a>
-                <button class="rate-btn" onclick="openReviewModal()">تقييم / إبلاغ</button>
+                <button class="rate-btn" onclick="openReportModal(${driver.id})">⚠️ إبلاغ</button>
             </div>
         `;
         container.appendChild(card);
     });
 }
 
-// نافذة التقييم والإبلاغ
-function openReviewModal() {
+// نظام الإبلاغ والمراجعة
+let reportingId = null;
+function openReportModal(id) {
+    reportingId = id;
     document.getElementById('reviewModal').classList.remove('hidden');
 }
 
@@ -128,6 +179,15 @@ document.getElementById('closeReview').addEventListener('click', () => {
 
 document.getElementById('reviewForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    alert('شكراً لك، تم إرسال التقرير/التقييم بنجاح.');
+    const driver = driversData.find(d => d.id === reportingId);
+    if (driver) driver.status = 'pending'; // إخفاء فوري لحين المراجعة
+    alert('تم إرسال الإبلاغ وإخفاء العنصر مؤقتاً لحين مراجعته من الإدارة.');
     document.getElementById('reviewModal').classList.add('hidden');
+    document.getElementById('searchBtn').click();
+});
+
+document.getElementById('addLocationBtn').addEventListener('click', () => {
+    if(prompt("أدخل اسم المكان أو نقطة الدالة الجديدة المقترحة:")) {
+        alert('تم إرسال المقترح للإدارة للمراجعة والنشر.');
+    }
 });
