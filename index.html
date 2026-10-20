@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <!-- نافذة تسجيل السائق (تظهر فقط إذا اختار سائق) -->
+    <!-- نافذة تسجيل السائق -->
     <div id="registerModal" class="modal hidden">
         <div class="modal-content">
             <h2>تسجيل بيانات السائق</h2>
@@ -37,7 +37,7 @@
                     <option value="دراجة">دراجة نارية</option>
                     <option value="حمل">شاحنة حمل</option>
                 </select>
-                <input type="text" id="regCity" placeholder="مدينة العمل أو الحي (مثلاً: بعقوبة - التحرير)" required>
+                <input type="text" id="regCity" placeholder="مدينة العمل (مثلاً: ديالي - بعقوبة)" required>
                 <input type="text" id="regImg" placeholder="رابط صورة السيارة أو الشخص (اختياري)">
                 <button type="submit" class="btn-primary">حفظ والدخول للدليل</button>
             </form>
@@ -52,18 +52,62 @@
 
         <!-- الخريطة التفاعلية -->
         <div id="map"></div>
-        <p class="map-hint">💡 نصيحة: انقر على الخريطة لتحديد نقاط الانطلاق والوصول بسهولة.</p>
+        <p class="map-hint">📍 الطريقة الأولى: انقر على الخريطة لتحديد النقاط (انطلاق ثم وصول).</p>
 
-        <!-- قسم تحديد الرحلة وأنواع المركبات -->
+        <!-- قسم تحديد الرحلة بالثلاث طرق -->
         <section class="trip-section">
-            <h3>خطط رحلتك</h3>
-            <div class="trip-inputs">
-                <input type="text" id="startPoint" placeholder="📍 نقطة الانطلاق (أو انقر الخريطة)">
-                <input type="text" id="stopPoint" placeholder="⏸️ نقطة توقف (اختياري)">
-                <input type="text" id="endPoint" placeholder="🏁 نقطة الوصول (أو انقر الخريطة)">
-            </div>
+            <h3>اختر طريقة تحديد الرحلة</h3>
             
-            <div class="vehicle-filters">
+            <!-- تبديل الطرق -->
+            <div class="method-tabs">
+                <button class="tab-btn active" data-target="method-map">الخريطة</button>
+                <button class="tab-btn" data-target="method-template">القالب البسيط</button>
+                <button class="tab-btn" data-target="method-guide">دليل المدن</button>
+            </div>
+
+            <!-- طريقة الخريطة -->
+            <div id="method-map" class="method-content active">
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">تم اختيار النقاط من الخريطة:</p>
+                <div class="input-with-clear">
+                    <input type="text" id="mapStart" placeholder="📍 نقطة الانطلاق من الخريطة" readonly>
+                    <button type="button" class="clear-btn" onclick="clearField('mapStart')">✕</button>
+                </div>
+                <div class="input-with-clear">
+                    <input type="text" id="mapEnd" placeholder="🏁 نقطة الوصول من الخريطة" readonly>
+                    <button type="button" class="clear-btn" onclick="clearField('mapEnd')">✕</button>
+                </div>
+            </div>
+
+            <!-- طريقة القالب البسيط -->
+            <div id="method-template" class="method-content">
+                <input type="text" id="tplStart" placeholder="📍 نقطة الانطلاق (اكتب هنا)">
+                <input type="text" id="tplStop" placeholder="⏸️ نقطة توقف وسط الرحلة (اختياري)">
+                <input type="text" id="tplEnd" placeholder="🏁 نقطة الوصول (اكتب هنا)">
+            </div>
+
+            <!-- طريقة دليل المدن الهرمي -->
+            <div id="method-guide" class="method-content">
+                <select id="selectGov" class="loc-select">
+                    <option value="">اختر المحافظة...</option>
+                    <option value="ديالى">ديالى</option>
+                    <option value="بغداد">بغداد</option>
+                    <option value="صلاح الدين">صلاح الدين</option>
+                </select>
+                <select id="selectDistrict" class="loc-select" disabled>
+                    <option value="">اختر القضاء...</option>
+                </select>
+                <select id="selectSubdistrict" class="loc-select" disabled>
+                    <option value="">اختر الناحية...</option>
+                </select>
+                <select id="selectNeighborhood" class="loc-select" disabled>
+                    <option value="">اختر الحي / المنطقة...</option>
+                </select>
+                <input type="text" id="landmarkInput" placeholder="📍 أقرب نقطة دالة (اختياري)...">
+                <button id="addLocationBtn" class="btn-secondary" style="font-size:0.8rem; margin-top:5px;">➕ اقتراح مكان جديد</button>
+            </div>
+
+            <!-- فلاتر المركبات -->
+            <div class="vehicle-filters" style="margin-top: 15px;">
                 <button class="filter-btn active" data-type="all">الكل</button>
                 <button class="filter-btn" data-type="تكسي">🚗 تكسي</button>
                 <button class="filter-btn" data-type="تكتك">🛺 تكتك</button>
@@ -71,9 +115,8 @@
                 <button class="filter-btn" data-type="حمل">🚚 حمل</button>
             </div>
 
-            <!-- صندوق البحث وزر البحث -->
             <div class="search-box-container">
-                <input type="text" id="searchInput" placeholder="ابحث بالمنطقة أو اسم السائق...">
+                <input type="text" id="searchInput" placeholder="ابحث باسم السائق أو نقطة الدالة...">
                 <button id="searchBtn" class="btn-search">بحث</button>
             </div>
         </section>
@@ -82,22 +125,21 @@
         <section class="drivers-section">
             <h3>نتائج البحث</h3>
             <div id="driversList" class="drivers-grid">
-                <p style="text-align: center; color: #777;">اضغط على زر "بحث" لعرض السائقين المتاحين.</p>
+                <p style="text-align: center; color: #777;">حدد مسارك أو منطقتك واضغط على زر "بحث".</p>
             </div>
         </section>
     </div>
 
-    <!-- نافذة التقييم والإبلاغ -->
+    <!-- نافذة الإبلاغ والمراجعة -->
     <div id="reviewModal" class="modal hidden">
         <div class="modal-content">
-            <h3>تقييم الرحلة أو إبلاغ</h3>
+            <h3>إبلاغ عن مكان أو سائق</h3>
             <form id="reviewForm">
-                <p>كيف كانت تجربتك مع السائق؟</p>
-                <div class="stars">⭐⭐⭐⭐⭐</div>
-                <textarea id="reportText" placeholder="اكتب تقريرك أو ملاحظتك هنا..."></textarea>
+                <p>عند الإبلاغ، سيتم إخفاء العنصر فورا لحين مراجعته من قبل الإدارة (تعديل، حذف، أو نشر).</p>
+                <textarea id="reportText" placeholder="اكتب سبب الإبلاغ..." required></textarea>
                 <input type="file" id="reportImage" accept="image/*">
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-primary">إرسال</button>
+                <div class="modal-buttons" style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" class="btn-primary">إرسال الإبلاغ</button>
                     <button type="button" id="closeReview" class="btn-secondary">إلغاء</button>
                 </div>
             </form>
