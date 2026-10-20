@@ -1,7 +1,7 @@
 let driversData = [
-    { id: 1, name: "أحمد العزاوي", phone: "07711223344", type: "تكسي", city: "بعقوبة - التحرير", img: "https://via.placeholder.com/50" },
-    { id: 2, name: "سعد التكتك", phone: "07822334455", type: "تكتك", city: "بعقوبة - المعلم", img: "https://via.placeholder.com/50" },
-    { id: 3, name: "علي الدراجة", phone: "07733445566", type: "دراجة", city: "خالص", img: "https://via.placeholder.com/50" }
+    { id: 1, name: "أحمد العزاوي", phone: "000000", type: "تكسي", city: "بعقوبة - التحرير", img: "https://via.placeholder.com/50" },
+    { id: 2, name: "سعد التكتك", phone: "777777", type: "تكتك", city: "بعقوبة - المعلم", img: "https://via.placeholder.com/50" },
+    { id: 3, name: "علي الدراجة", phone: "8888888", type: "دراجة", city: "خالص", img: "https://via.placeholder.com/50" }
 ];
 
 // تهيئة الخريطة
