@@ -10,10 +10,22 @@
 </head>
 <body>
 
-    <!-- نافذة التسجيل الأولية (تظهر عند الدخول لأول مرة) -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
+    <!-- نافذة الاختيار الأولية (سائق أم راكب) -->
+    <div id="roleModal" class="modal">
+        <div class="modal-content text-center">
             <h2>مرحباً بك في دليل السائقين</h2>
+            <p>يرجى تحديد صفحتك للمتابعة:</p>
+            <div class="role-buttons">
+                <button id="btnDriverRole" class="btn-primary">أنا سائق (تسجيل بالدليل)</button>
+                <button id="btnPassengerRole" class="btn-secondary">أنا راكب (بحث عن تكسي)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تسجيل السائق (تظهر فقط إذا اختار سائق) -->
+    <div id="registerModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>تسجيل بيانات السائق</h2>
             <p class="notice">⚠️ تنبيه: البيانات التي ستقوم بإدخالها ستكون عامة ومرئية للجميع لكي يتمكن المستخدمون من الاتصال بك وحجزك هاتفياً.</p>
             <form id="registerForm">
                 <input type="text" id="regName" placeholder="الاسم الكامل أو اسم المكتب" required>
@@ -26,7 +38,7 @@
                     <option value="حمل">شاحنة حمل</option>
                 </select>
                 <input type="text" id="regCity" placeholder="مدينة العمل أو الحي (مثلاً: بعقوبة - التحرير)" required>
-                <input type="text" id="regImg" placeholder="رابط صورة السيارة أو الشخص (اختياري)" >
+                <input type="text" id="regImg" placeholder="رابط صورة السيارة أو الشخص (اختياري)">
                 <button type="submit" class="btn-primary">حفظ والدخول للدليل</button>
             </form>
         </div>
@@ -34,24 +46,21 @@
 
     <!-- الواجهة الرئيسية -->
     <div class="app-container">
-        <!-- شريط التحكم الجانبي أو العلوي -->
         <header class="app-header">
             <h1>دليل السائقين العراقي</h1>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="ابحث عن مدينة أو حي (عربي / English)...">
-            </div>
         </header>
 
         <!-- الخريطة التفاعلية -->
         <div id="map"></div>
+        <p class="map-hint">💡 نصيحة: انقر على الخريطة لتحديد نقاط الانطلاق والوصول بسهولة.</p>
 
         <!-- قسم تحديد الرحلة وأنواع المركبات -->
         <section class="trip-section">
             <h3>خطط رحلتك</h3>
             <div class="trip-inputs">
-                <input type="text" id="startPoint" placeholder="📍 نقطة الانطلاق">
+                <input type="text" id="startPoint" placeholder="📍 نقطة الانطلاق (أو انقر الخريطة)">
                 <input type="text" id="stopPoint" placeholder="⏸️ نقطة توقف (اختياري)">
-                <input type="text" id="endPoint" placeholder="🏁 نقطة الوصول">
+                <input type="text" id="endPoint" placeholder="🏁 نقطة الوصول (أو انقر الخريطة)">
             </div>
             
             <div class="vehicle-filters">
@@ -61,13 +70,19 @@
                 <button class="filter-btn" data-type="دراجة">🏍️ دراجة</button>
                 <button class="filter-btn" data-type="حمل">🚚 حمل</button>
             </div>
+
+            <!-- صندوق البحث وزر البحث -->
+            <div class="search-box-container">
+                <input type="text" id="searchInput" placeholder="ابحث بالمنطقة أو اسم السائق...">
+                <button id="searchBtn" class="btn-search">بحث</button>
+            </div>
         </section>
 
-        <!-- قائمة السائقين المتاحين -->
+        <!-- قائمة السائقين المتاحين (نتائج البحث) -->
         <section class="drivers-section">
-            <h3>السائقون المتاحون في المنطقة</h3>
+            <h3>نتائج البحث</h3>
             <div id="driversList" class="drivers-grid">
-                <!-- يتم تعبئتها ديناميكياً -->
+                <p style="text-align: center; color: #777;">اضغط على زر "بحث" لعرض السائقين المتاحين.</p>
             </div>
         </section>
     </div>
